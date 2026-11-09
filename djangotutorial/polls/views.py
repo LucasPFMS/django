@@ -51,8 +51,19 @@ def vote(request, question_id):
         # user hits the Back button.
         return HttpResponseRedirect(reverse("polls:results", args=(question.id,)))
 
-    
+
 class AllView(generic.ListView):
- model = Question
- template_name = 'polls/all.html'
+    model = Question
+    template_name = 'polls/all.html'
+
+
+def frequency(request, question_id):
+    question = Question.objects.get(id=question_id)
+    choices = question.get_choices()
+
+    return render(request, 'polls/frequency.html', {
+        'question': question,
+        'choices': choices,
+    })
+
 
