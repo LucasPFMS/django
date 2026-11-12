@@ -5,8 +5,9 @@ from django.db.models import F, Sum, Max
 from django.http import HttpResponseRedirect
 from django.shortcuts import get_object_or_404, render
 from django.urls import reverse
+from django.utils import timezone
 from django.views import generic
-
+from .forms import QuestionAddForm
 from .models import Choice, Question
 from .utils import minimax
 
@@ -88,6 +89,32 @@ def statistics(request):
         'question_la_plus_populaire': question_la_plus_populaire,
         'question_la_moins_populaire': question_la_moins_populaire,
         'derniere_question': derniere_question, })
+
+
+def add(request):
+     if request.method == 'POST':
+        form = QuestionAddForm(request.POST)
+        if form.is_valid():
+            question = \
+                Question(question_text=\
+                    form.cleaned_data['question_text'],
+                    pub_date=timezone.now())
+            question.save()
+            # on traite à présent les champs de choix remplis
+            # (on s'arrête au premier vide)
+            for no_choix in range(NB_MAX_CHOIX):
+                nom_champ = 'choice_{}'.format(no_choix)
+                choice_text = form.cleaned_data[nom_champ].strip()
+                if choice_text:
+                    choice = Choice(question=question,choice_text=choice_text)
+                    choice.save()
+                else:
+                    break
+                return render(request, 'polls/confirm_add.html')
+    else:
+        form: QuestionAddForm = QuestionAddForm()
+    return render(request, 'polls/add.html', {'form': form})
+
 
 
 
